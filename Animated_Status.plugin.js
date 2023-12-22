@@ -1,10 +1,10 @@
-//META{"name":"AnimatedStatus","source":"https://raw.githubusercontent.com/toluschr/BetterDiscord-Animated-Status/master/Animated_Status.plugin.js","website":"https://github.com/toluschr/BetterDiscord-Animated-Status"}*//
+//META{"name":"AnimatedStatus","source":"https://github.com/ArandasNyan/BetterDiscord-Animated-Status","website":"https://github.com/toluschr/BetterDiscord-Animated-Status"}*//
 
 class AnimatedStatus {
 	/* BD functions */
 	getName() { return "Animated Status"; }
-	getVersion() { return "0.13.2"; }
-	getAuthor() { return "toluschr"; }
+	getVersion() { return "0.13.3"; }
+	getAuthor() { return "ArandasNyan & toluschr"; }
 	getDescription() { return "Animate your Discord status"; }
 
 	SetData(key, value) {
@@ -27,7 +27,9 @@ class AnimatedStatus {
 
 		this.modules = this.modules || (() => {
 			let m = []
-			webpackChunkdiscord_app.push([['AnimatedStatus'], {}, e => { m = m.concat(Object.values(e.c)) }])
+			webpackChunkdiscord_app.push([['AnimatedStatus'], {}, e => {
+				m = m.concat(e.c ? Object.values(e.c) : []);
+			}])
 			return m
 		})();
 
@@ -60,10 +62,10 @@ class AnimatedStatus {
 
 	ConfigObjectFromArray(arr) {
 		let data = {};
-		if (arr[0] !== undefined && arr[0].length > 0) data.text       = arr[0];
+		if (arr[0] !== undefined && arr[0].length > 0) data.text = arr[0];
 		if (arr[1] !== undefined && arr[1].length > 0) data.emoji_name = arr[1];
-		if (arr[2] !== undefined && arr[2].length > 0) data.emoji_id   = arr[2];
-		if (arr[3] !== undefined && arr[3].length > 0) data.timeout    = parseInt(arr[3]);
+		if (arr[2] !== undefined && arr[2].length > 0) data.emoji_id = arr[2];
+		if (arr[3] !== undefined && arr[3].length > 0) data.timeout = parseInt(arr[3]);
 		return data;
 	}
 
@@ -74,7 +76,7 @@ class AnimatedStatus {
 		try {
 			return eval(text.substr(evalPrefix.length));
 		} catch (e) {
-			BdApi.showToast(e, {type: "error"});
+			BdApi.showToast(e, { type: "error" });
 			return "";
 		}
 	}
@@ -89,8 +91,8 @@ class AnimatedStatus {
 		this.cancel = () => { shouldContinue = false; };
 
 		Promise.all([this.ResolveStatusField(this.animation[i].text),
-		             this.ResolveStatusField(this.animation[i].emoji_name),
-		             this.ResolveStatusField(this.animation[i].emoji_id)]).then(p => {
+		this.ResolveStatusField(this.animation[i].emoji_name),
+		this.ResolveStatusField(this.animation[i].emoji_id)]).then(p => {
 			Status.Set(this.ConfigObjectFromArray(p));
 			this.cancel = undefined;
 
@@ -106,7 +108,7 @@ class AnimatedStatus {
 		});
 	}
 
-	NewEditorRow({text, emoji_name, emoji_id, timeout} = {}) {
+	NewEditorRow({ text, emoji_name, emoji_id, timeout } = {}) {
 		let hbox = GUI.newHBox();
 		hbox.style.marginBottom = this.kSpacing;
 
@@ -247,12 +249,12 @@ class AnimatedStatus {
 				this.SetData("timeout", parseInt(timeout.value));
 				this.SetData("animation", this.JSONFromEditor(edit));
 			} catch (e) {
-				BdApi.showToast(e, {type: "error"});
+				BdApi.showToast(e, { type: "error" });
 				return;
 			}
 
 			// Show Toast
-			BdApi.showToast("Settings were saved!", {type: "success"});
+			BdApi.showToast("Settings were saved!", { type: "success" });
 
 			// Restart
 			this.stop();
@@ -268,7 +270,7 @@ class AnimatedStatus {
 /* Status API */
 const Status = {
 	strerror: (req) => {
-		if (req.status  < 400) return undefined;
+		if (req.status < 400) return undefined;
 		if (req.status == 401) return "Invalid AuthToken";
 
 		// Discord _sometimes_ returns an error message
@@ -287,11 +289,16 @@ const Status = {
 		req.setRequestHeader("content-type", "application/json");
 		req.onload = () => {
 			let err = Status.strerror(req);
-			if (err != undefined)
-				BdApi.showToast(`Animated Status: Error: ${err}`, {type: "error"});
+			if (err !== undefined) {
+				BdApi.showToast(`Animated Status: Error: ${err}`, { type: "error" });
+			}
 		};
-		if (status === {}) status = null;
-		req.send(JSON.stringify({custom_status: status}));
+
+		if (!status) {
+			status = null;
+		}
+
+		req.send(JSON.stringify({ custom_status: status }));
 	},
 };
 
@@ -311,7 +318,7 @@ const GUI = {
 		out.addEventListener("focusout", () => {
 			if (parseInt(out.value) < minimum) {
 				out.value = String(minimum);
-				BdApi.showToast(`Value must not be lower than ${minimum}`, {type: "error"});
+				BdApi.showToast(`Value must not be lower than ${minimum}`, { type: "error" });
 			}
 		});
 		return out;
